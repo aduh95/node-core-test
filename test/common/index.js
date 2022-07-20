@@ -102,6 +102,23 @@ function expectsError (validator, exact) {
   }, exact)
 }
 
+if (typeof AbortSignal.timeout !== 'function') {
+  class AbortError extends Error {
+    constructor(message = 'The operation was aborted', options = undefined) {
+      super(message, options);
+      this.code = 'ABORT_ERR';
+      this.name = 'AbortError';
+    }
+  }
+
+  AbortSignal.timeout = function timeout (delay) {
+    const ac = new AbortController()
+    setTimeout(() => ac.abort(new AbortError(
+      'The operation was aborted due to timeout')), delay).unref()
+    return ac.signal
+  }
+}
+
 module.exports = {
   expectsError
 }
